@@ -86,7 +86,7 @@ function ChangePassword({ changePassword, setChangePassword }) {
         <div className="h-1/7 flex items-center font-semibold justify-between">
           Ganti Kata sandi:
           <button
-            className="h-6 aspect-square border border-gray-700 flex items-center justify-center hover:bg-gray-700"
+            className="h-6 aspect-square flex items-center justify-center hover:bg-teal-500"
             onClick={() => setChangePassword(false)}
           >
             x
@@ -105,7 +105,7 @@ function ChangePassword({ changePassword, setChangePassword }) {
             return (
               <Form>
                 <div className="h-4/6 mb-3">
-                  <div className="w-full relative flex flex-col justify-between gap-y-1 mb-2">
+                  <div className="w-full relative flex flex-col justify-between gap-y-1 mb-4">
                     <label htmlFor="" className="font-bold">
                       Old Password:
                     </label>
@@ -133,16 +133,16 @@ function ChangePassword({ changePassword, setChangePassword }) {
                       )}
                     </button>
                     {errors.oldPassword && touched.oldPassword ? (
-                      <div className="absolute text-red-600 -bottom-6">
+                      <div className="absolute text-red-600 -bottom-4 text-xs">
                         {errors.oldPassword}
                       </div>
                     ) : null}
                     {true ? (
-                      <div className="absolute text-red-600 -bottom-6"></div>
+                      <div className="absolute text-red-600 -bottom-4 text-xs"></div>
                     ) : null}
                   </div>
 
-                  <div className="w-full relative flex flex-col justify-between gap-y-1 mb-2">
+                  <div className="w-full relative flex flex-col justify-between gap-y-1 mb-4">
                     <label htmlFor="" className="font-bold">
                       New Password:
                     </label>
@@ -170,16 +170,16 @@ function ChangePassword({ changePassword, setChangePassword }) {
                       )}
                     </button>
                     {errors.newPassword && touched.newPassword ? (
-                      <div className="absolute text-red-600 -bottom-6">
+                      <div className="absolute text-red-600 -bottom-4 text-xs">
                         {errors.newPassword}
                       </div>
                     ) : null}
                     {true ? (
-                      <div className="absolute text-red-600 -bottom-6"></div>
+                      <div className="absolute text-red-600 -bottom-4 text-xs"></div>
                     ) : null}
                   </div>
 
-                  <div className="w-full relative flex flex-col justify-between gap-y-1 mb-2">
+                  <div className="w-full relative flex flex-col justify-between gap-y-1 mb-4">
                     <label htmlFor="" className="font-bold">
                       Confirmation Password:
                     </label>
@@ -210,12 +210,12 @@ function ChangePassword({ changePassword, setChangePassword }) {
                     </button>
                     {errors.confirmationPassword &&
                     touched.confirmationPassword ? (
-                      <div className="absolute text-red-600 -bottom-6">
+                      <div className="absolute text-red-600 -bottom-4 text-xs">
                         {errors.confirmationPassword}
                       </div>
                     ) : null}
                     {true ? (
-                      <div className="absolute text-red-600 -bottom-6"></div>
+                      <div className="absolute text-red-600 -bottom-4 text-xs"></div>
                     ) : null}
                   </div>
                 </div>
@@ -224,7 +224,7 @@ function ChangePassword({ changePassword, setChangePassword }) {
                   Kata sandi harus mengandung setidaknya 8 karakter termasuk
                   huruf besar, huruf kecil, simbol dan angka
                 </div>
-                <div className="h-1/6 flex justify-end items-center pt-4">
+                <div className="h-1/6 flex justify-end items-center pt-2">
                   <button
                     className="border border-teal-500 hover:bg-teal-500 w-32 h-8 rounded-md"
                     type="submit"
