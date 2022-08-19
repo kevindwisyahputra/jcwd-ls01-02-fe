@@ -16,7 +16,7 @@ import {
 import Loading from "../../User/Component/Loading";
 
 function ModalEditProduct(props) {
-  const { modalEdit, closeModalEdit, editId, setEditId } = props;
+  const { modalEdit, closeModalEdit, editId, setEditId, getProducts } = props;
   const initialState1 = {
     name: "",
     NIE: "",
@@ -62,7 +62,6 @@ function ModalEditProduct(props) {
 
   const getDetails = async () => {
     try {
-      console.log("fetch");
       setLoading(true);
       const res = await axios.get(`${API_URL}/admin/product-details`, {
         params: { id: editId },
@@ -79,7 +78,6 @@ function ModalEditProduct(props) {
         principal,
         cara_pakai,
         peringatan,
-        stock,
         satuan,
         kemasan,
         price,
@@ -144,7 +142,6 @@ function ModalEditProduct(props) {
         ...details2,
         id: editId,
       };
-      console.log(insertData);
       let formData = new FormData();
       if (detailImage.photo.file) {
         formData.append("product_photo", detailImage.photo.file);
@@ -159,6 +156,7 @@ function ModalEditProduct(props) {
       cancel();
       setDetails1(initialState1);
       setDetails2(initialState2);
+      getProducts();
     } catch (error) {
       console.log(error);
     }
@@ -211,6 +209,7 @@ function ModalEditProduct(props) {
 
   useEffect(() => {
     if (editId && modalEdit) getDetails();
+    // eslint-disable-next-line
   }, [editId, modalEdit]);
 
   return (
@@ -247,7 +246,7 @@ function ModalEditProduct(props) {
                   <h1 className="font-bold">Ubah Detail Produk</h1>
 
                   <button
-                    className="btn-plain text-xl rounded-full hover:text-primary hover:bg-primary/20 border flex justify-center items-center px-2 py-2 absolute right-0"
+                    className="btn-plain text-xl rounded-full hover:text-primary hover:bg-primary/20 border flex justify-center items-center p-2 absolute right-0"
                     onClick={cancel}
                   >
                     <XIcon className="h-5" />

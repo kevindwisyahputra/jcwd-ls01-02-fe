@@ -13,11 +13,12 @@ import axios from "axios";
 import * as Yup from "yup";
 import FormikControl from "../../User/Component/Formik/FormikControl";
 import { toast } from "react-toastify";
+import { XIcon } from "@heroicons/react/solid";
 
 function ModalPrescriptionService(props) {
   const { isOpen, closeModal, data, getOrders } = props;
   const initialTerms = "";
-  const initialQty = 1;
+  const initialQty = 0;
   const [loadingSubmit, setLoadingSubmit] = useState(false);
   const [terms, setTerms] = useState(initialTerms);
   const [page, setPage] = useState(0);
@@ -25,24 +26,26 @@ function ModalPrescriptionService(props) {
   const [selected, setSelected] = useState(false);
   const [qty, setQty] = useState(initialQty);
   const [dosis, setDosis] = useState("");
-  const [namaPasien, setNamaPasien] = useState("");
-  const [namaDokter, setNamaDokter] = useState("");
   const [cartOrder, setCartOrder] = useState([]);
   const [dosisKlik, setDosisKlik] = useState(false);
   const [zoom, setZoom] = useState(1);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
-  const { loading, error, products, hasMore } = useProductsSearch(terms, page);
+  const { loading, error, products, hasMore } = useProductsSearch(
+    terms,
+    page,
+    isOpen
+  );
 
   const objectFit = "vertical-cover";
   const aspect = 1;
   const shape = "rect";
   const cropSize = { width: 293, height: 427 };
-  const insertData = { cartOrder, namaPasien, namaDokter };
   const initialValues = {
     namaPasien: "",
     namaDokter: "",
     qty,
   };
+
   const validationSchema = Yup.object({
     namaPasien: Yup.string()
       .required("Wajib diisi")
@@ -74,18 +77,28 @@ function ModalPrescriptionService(props) {
       setCartOrder([]);
     }, 500);
   };
-
   const submitProcess = async (values) => {
     try {
-      console.log(values);
+      let dosis = "";
+      for (const order of cartOrder) {
+        dosis
+          ? (dosis += `| ${order.name} : ${order.dosis}`)
+          : (dosis = `${order.name} : ${order.dosis} `);
+      }
       setLoadingSubmit(true);
       const insertData = {
-        cart_checkout: cartOrder,
+        cart_checkout: cartOrder.map((val) => {
+          return {
+            id: val.id,
+            qty: val.qty,
+            price: val.price,
+          };
+        }),
         namaPasien: values.namaPasien,
         namaDokter: values.namaDokter,
         id: data.id,
+        dosis,
       };
-      console.log(insertData);
 
       await axios.post(`${API_URL}/admin/order/valid-prescription`, insertData);
       toast.success(`Pesanan berhasil diproses`, {
@@ -107,7 +120,8 @@ function ModalPrescriptionService(props) {
 
   const onSubmit = () => {
     setDosisKlik(true);
-    if (dosis == "") return;
+    if (dosis === "") return;
+    if (qty === 0) return;
     const insertData = {
       name: selectedProduct.name,
       golongan: selectedProduct.golongan,
@@ -115,6 +129,8 @@ function ModalPrescriptionService(props) {
       qty,
       dosis,
       id: selectedProduct.id,
+      stock: selectedProduct.stock,
+      price: selectedProduct.price,
     };
     setCartOrder((prev) => {
       let edit = false;
@@ -137,7 +153,6 @@ function ModalPrescriptionService(props) {
   };
 
   const editCartOrder = (i) => {
-    console.log(cartOrder);
     setSelectedProduct(cartOrder[i]);
     setSelected(true);
     setTerms(cartOrder[i].name);
@@ -147,7 +162,6 @@ function ModalPrescriptionService(props) {
 
   const deleteCartOrder = (i) => {
     setCartOrder((prev) => {
-      console.log(prev);
       let result = [...prev];
       result.splice(i, 1);
       return result;
@@ -258,10 +272,10 @@ function ModalPrescriptionService(props) {
 
                   <button
                     type="button"
-                    className="btn-plain text-xl rounded-full hover:text-primary hover:bg-primary/20 border flex justify-center items-center px-3 py-1 absolute right-0"
+                    className="btn-plain text-xl rounded-full hover:text-primary hover:bg-primary/20 border flex justify-center items-center p-2 absolute right-0"
                     onClick={cancelService}
                   >
-                    ✕
+                    <XIcon className="h-5" />
                   </button>
                 </Dialog.Title>
                 <Formik
@@ -279,7 +293,13 @@ function ModalPrescriptionService(props) {
                       touched,
                     } = formik;
                     return (
-                      <Form>
+                      <Form
+                        onKeyDown={(e) => {
+                          if (e.key == "Enter") {
+                            e.preventDefault();
+                          }
+                        }}
+                      >
                         <div className="w-full h-[427px] flex">
                           <div className="w-2/5 h-full border-2 relative bg-neutral-gray">
                             <div className="w-1/3 flex justify-center items-center bg-primary/10 rounded-lg overflow-hidden absolute h-6 bottom-2 right-2 z-20">
@@ -359,7 +379,6 @@ function ModalPrescriptionService(props) {
                                   placeholder="Masukkan nama pasien"
                                   onChange={(e) => {
                                     handleChange(e);
-                                    setNamaPasien(e);
                                   }}
                                   onBlur={handleBlur}
                                   type="text"
@@ -378,7 +397,6 @@ function ModalPrescriptionService(props) {
                                   placeholder="Masukkan nama dokter"
                                   onChange={(e) => {
                                     handleChange(e);
-                                    setNamaDokter(e);
                                   }}
                                   onBlur={handleBlur}
                                   type="text"
@@ -408,6 +426,11 @@ function ModalPrescriptionService(props) {
                                   <div className="w-full flex gap-x-4">
                                     <div className="w-1/5 flex flex-col gap-y-2 relative z-0">
                                       Kuantitas
+                                      {qty === 0 && dosisKlik && (
+                                        <div className="absolute text-red-600 -bottom-5 right-0 text-sm">
+                                          Min. 1
+                                        </div>
+                                      )}
                                       <div
                                         className={`w-full flex justify-center items-center outline-1 bg-primary/10 rounded-lg overflow-hidden outline ${
                                           errors.qty && touched.qty
@@ -419,7 +442,7 @@ function ModalPrescriptionService(props) {
                                           type="button"
                                           className="button-general h-full rounded-l-lg w-1/3 p-0 overflow-hidden flex justify-center items-center hover:bg-primary/20 focus:rounded-l-lg"
                                           onClick={() =>
-                                            qty === 1
+                                            qty === 0
                                               ? null
                                               : setQty((prev) => prev - 1)
                                           }
@@ -430,22 +453,19 @@ function ModalPrescriptionService(props) {
                                             className="h-full"
                                           />
                                         </button>
-                                        {/* <input
-                                        type="number"
-                                        className="w-1/3 text-center"
-                                        value={qty}
-                                      /> */}
+
                                         <span className={`w-1/3 text-center`}>
                                           {qty}
                                         </span>
                                         <button
                                           type="button"
                                           className="button-general h-full rounded-r-lg w-1/3 p-0 overflow-hidden flex justify-center items-center hover:bg-primary/20 focus:rounded-r-lg"
-                                          onClick={() =>
-                                            qty === selectedProduct.stock
+                                          onClick={() => {
+                                            return qty ===
+                                              Number(selectedProduct.stock)
                                               ? null
-                                              : setQty((prev) => prev + 1)
-                                          }
+                                              : setQty((prev) => prev + 1);
+                                          }}
                                         >
                                           <img
                                             src={plusIcon}
@@ -489,7 +509,11 @@ function ModalPrescriptionService(props) {
                                     </div>
                                   </div>
                                   <div className="w-full flex justify-between items-center mt-2">
-                                    <span>{`Sisa ${selectedProduct.stock} ${selectedProduct.satuan}`}</span>
+                                    <span>
+                                      {selectedProduct.stock == 0
+                                        ? "Stok habis"
+                                        : `Sisa ${selectedProduct.stock} ${selectedProduct.satuan}`}
+                                    </span>
                                     <button
                                       type="button"
                                       className={`button-primary px-2 text-xs ${

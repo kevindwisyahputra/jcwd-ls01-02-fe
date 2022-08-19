@@ -1,10 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import axios from "axios";
 import API_URL from "../../Helpers/API_URL";
 import { toast } from "react-toastify";
-// import unknown from "../Assets/unknownpeople.png";
 import DefaultPicture from "../../Assets/default_pic.png";
 import ChangePassword from "../Component/ChangePassword";
 import Button from "../Component/Button";
@@ -13,27 +12,26 @@ import { Form, Formik } from "formik";
 import Cookies from "js-cookie";
 import ModalImageCropper from "../Component/ModalImageCropper";
 import Loading from "../Component/Loading";
+import CardOrderUser from "../Component/CardOrderUser";
+import {
+  ChevronDownIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+} from "@heroicons/react/outline";
+import {
+  ChevronDoubleLeftIcon,
+  ChevronDoubleRightIcon,
+} from "@heroicons/react/solid";
 
 function Profile() {
   const dispatch = useDispatch();
   const avaRef = useRef();
   const navigate = useNavigate();
-  // const { id, username, email, profile_picture, verified, fullname } =
-  //   useSelector((state) => state.user);
   const params = useParams();
   const { tab } = params;
-  const { isLogin } = useSelector((state) => state.user);
-  const [loadingEmail, setLoadingEmail] = useState(false);
-  const [changePassword, setChangePassword] = useState(false);
-  const [changed, setChanged] = useState(false);
-  const [modalImageCropper, setModalImageCropper] = useState(false);
-  const [cropping, setCropping] = useState(null);
-
-  const modalImageCropperHandler = () => {
-    setModalImageCropper(!modalImageCropper);
-  };
   let {
     profile_picture,
+    isLogin,
     id,
     verified,
     username,
@@ -44,6 +42,102 @@ function Profile() {
     // age,
     error_mes,
   } = useSelector((state) => state.user);
+  const [loadingEmail, setLoadingEmail] = useState(false);
+  const [changePassword, setChangePassword] = useState(false);
+  const [changed, setChanged] = useState(false);
+  const [modalImageCropper, setModalImageCropper] = useState(false);
+  const [cropping, setCropping] = useState(null);
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(0);
+  const [minPage, setMinPage] = useState(0);
+  const [maxPage, setMaxPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [limit, setLimit] = useState(10);
+  const [total, setTotal] = useState(0);
+  const [terms, setTerms] = useState("");
+  const [sinceDate, setSinceDate] = useState("");
+  const [toDate, setToDate] = useState("");
+  const [order, setOrder] = useState("ORDER BY o.id DESC");
+  const [searchParams] = useSearchParams();
+  const status = searchParams.get("status");
+
+  const getOrders = async () => {
+    try {
+      setLoading(true);
+      let token = Cookies.get("token");
+      let res = await axios.get(
+        `${API_URL}/transaction/orders/${searchParams.get("status")}`,
+        {
+          headers: { authorization: token },
+          params: { sinceDate, toDate, page, limit, order },
+        }
+      );
+      setData(res.data.data.orders);
+      setTotal(res.data.data.total);
+      setTotalPages(() => Math.ceil(res.data.data.total / limit));
+      setMinPage(0);
+      setMaxPage(() => {
+        if (totalPages > 5) return 4;
+        return totalPages - 1;
+      });
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const printOrders = (data) => {
+    return data.map((val, i) => {
+      return <CardOrderUser data={val} key={i} getOrders={getOrders} />;
+    });
+  };
+
+  const printButtons = () => {
+    let pages = [];
+    let buttonsTotal = totalPages;
+    for (let i = 0; i < buttonsTotal; i++) {
+      pages.push("");
+    }
+    return pages.map((val, i) => {
+      return (
+        <button
+          key={i}
+          className={`btn-plain h-8 aspect-square rounded-full ${
+            page === i ? "bg-primary text-white" : ""
+          }`}
+          onClick={async () => {
+            if (page !== i) {
+              setPage(i);
+            }
+          }}
+        >
+          {i + 1}
+        </button>
+      );
+    });
+  };
+
+  useEffect(() => {
+    const currentParams = Object.fromEntries([...searchParams]);
+  }, [searchParams]);
+
+  useEffect(() => {
+    setSinceDate("");
+    setToDate("");
+    getOrders();
+    return () => {};
+  }, [status, limit, page]);
+
+  useEffect(() => {
+    if (sinceDate || toDate) getOrders();
+  }, [sinceDate, toDate]);
+
+  const modalImageCropperHandler = () => {
+    setModalImageCropper(!modalImageCropper);
+  };
+
   if (fullname == null) {
     fullname = "";
   }
@@ -73,7 +167,8 @@ function Profile() {
   });
 
   useEffect(() => {
-    if (!isLogin) navigate("/home");
+    if (!isLogin) navigate("/");
+    if (isLogin && !verified) return navigate("/unverified");
     // eslint-disable-next-line
   }, [isLogin]);
 
@@ -88,11 +183,12 @@ function Profile() {
       username: values.username,
       fullname: values.fullname,
       gender: values.gender,
-      address: values.address,
-      age: values.age,
+      // address: values.address,
+      bod: values.age,
     };
 
     formData.append("data", JSON.stringify(dataInput));
+    console.log(dataInput);
     try {
       setChanged(false);
       setloadingSubmit(true);
@@ -118,21 +214,6 @@ function Profile() {
       });
     } finally {
       setloadingSubmit(false);
-    }
-  };
-  const sendEmail = async () => {
-    try {
-      setLoadingEmail(true);
-      await axios.post(`${API_URL}/auth/email-verification`, {
-        id,
-        username,
-        email,
-      });
-      toast.success("Email sent!");
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setLoadingEmail(false);
     }
   };
 
@@ -182,9 +263,7 @@ function Profile() {
                           className="hidden"
                           onClick={(event) => (event.target.value = null)}
                           onChange={(event) => {
-                            console.log("event :", event.target.files[0]);
                             if (event.target.files[0]) {
-                              console.log("event :", event.target.files[0]);
                               let format =
                                 event.target.files[0].name.split(".");
                               format = format[format.length - 1];
@@ -228,13 +307,7 @@ function Profile() {
                           Besar file: Maksimum 5 mb. Extensi file yang
                           diperbolehkan: JPG, JPEG & PNG
                         </div>
-                        <button
-                          disabled={loadingEmail}
-                          className="button-primary disabled:bg-gray-500 w-full h-11"
-                          onClick={sendEmail}
-                        >
-                          Send Email Verification
-                        </button>
+
                         <button
                           className="button-outline w-full h-11"
                           onClick={() => {
@@ -243,35 +316,6 @@ function Profile() {
                         >
                           Change Password
                         </button>
-                        <div className="flex flex-col items-center text-center">
-                          {loadingVerify ? (
-                            <Loading
-                              className={"animate-spin items-center h-30 w-30"}
-                            />
-                          ) : (
-                            <>
-                              <div
-                                className={`text-l ${
-                                  verified ? `text-primary` : `text-red-600`
-                                }`}
-                              >
-                                {verified ? (
-                                  "Already verified!"
-                                ) : (
-                                  <div className="flex flex-col">
-                                    Not yet verified!
-                                  </div>
-                                )}
-                              </div>
-                            </>
-                          )}
-                        </div>
-                        {!verified && (
-                          <div className="text-sm mr-5 text-red-600 text-center">
-                            Please verify your account to be able to change User
-                            Details.
-                          </div>
-                        )}
                       </div>
                       <Form className="w-3/4 flex flex-col">
                         <div>
@@ -339,7 +383,7 @@ function Profile() {
                             value={email}
                             disabled
                             placeholder="Jhondoe@mail.com"
-                            className={`field-input w-full h-10 bg-neutral-gray cursor-not-allowed`}
+                            className={`field-input w-full h-10 bg-neutral-gray`}
                           />
                           <div className={`text-gray text-xs mt-2`}>
                             Email cannot be changed.
@@ -350,6 +394,11 @@ function Profile() {
                             type="text"
                             placeholder="Jl. Meruya No. 9 Kembangan Jakarta Barat"
                             className={`field-input w-full h-10 `}
+                            onChange={(e) => {
+                              setChanged(true);
+                              handleChange(e);
+                            }}
+                            value={values.address}
                           />
                           <div className="w-full flex gap-x-5">
                             <div className="w-2/4">
@@ -359,33 +408,39 @@ function Profile() {
                                 type="date"
                                 placeholder=""
                                 className={`field-input w-full h-10 mr-5 `}
+                                onChange={(e) => {
+                                  setChanged(true);
+                                  handleChange(e);
+                                }}
+                                value={values.age}
                               />
                             </div>
                             <div className="w-2/4">
                               <div className="mt-3">Gender</div>
-                              <select className="field-input w-full h-10 bg-white rounded-lg">
+                              <select
+                                className="field-input w-full h-10 bg-white rounded-lg"
+                                onChange={(e) => {
+                                  setChanged(true);
+                                  handleChange(e);
+                                }}
+                                value={values.gender}
+                              >
                                 <option value="">All</option>
                                 <option value="Male">Male</option>
                                 <option value="Female">Female</option>
                               </select>
                             </div>
                           </div>
-                          {loadingSubmit ? (
-                            <Loading
-                              className={"animate-spin h-10 w-10 ml-5"}
-                            />
-                          ) : (
-                            <Button
-                              type="submit"
-                              buttonContent={
-                                isSubmitting ? "Loading.." : "Save Changes"
-                              }
-                              disabled={!isValid || isSubmitting}
-                              className={`bg-primary text-white disabled:bg-gray-600 disabled:cursor-not-allowed text-sm w-48 mt-6  ${
-                                isSubmitting && "loading"
-                              }`}
-                            />
-                          )}
+                          <Button
+                            type="submit"
+                            buttonContent={
+                              isSubmitting ? "Loading.." : "Save Changes"
+                            }
+                            disabled={!isValid || isSubmitting}
+                            className={`bg-primary text-white disabled:bg-gray-600 disabled:cursor-not-allowed text-sm font-bold w-1/3 h-11 rounded-lg mt-6 justify-between ${
+                              isSubmitting && "loading"
+                            }`}
+                          />
                         </div>
                       </Form>
                     </div>
@@ -398,43 +453,76 @@ function Profile() {
       case "orders":
         return (
           <div className="w-full px-10 py-7">
-            <div className="">Daftar Pemesanan</div>
-            <div className="w-full flex">
-              <button className="w-1/6 button-outline rounded-none py-5 outline-0 ">
+            <div className="font-bold">Daftar Pemesanan</div>
+            <div className="w-full flex mt-3">
+              <button
+                className="w-1/6 mr-4 h-10 button-outline py-5 rounded-full"
+                onClick={() => navigate("/myaccount/orders?status=all")}
+              >
                 Semua
               </button>
-              <button className="w-1/6 button-outline rounded-none py-5 outline-0">
-                Menunggu
+              <button
+                className="w-1/6 mr-4 h-10 button-outline py-5 rounded-full"
+                onClick={() =>
+                  navigate("/myaccount/orders?status=Pengecekan-Resep")
+                }
+              >
+                Pengecekan Resep
               </button>
-              <button className="w-1/6 button-outline rounded-none py-5 outline-0">
+              <button
+                className="w-1/6 mr-4 h-10 button-outline py-5 rounded-full"
+                onClick={() =>
+                  navigate("/myaccount/orders?status=Pesanan-Diterima")
+                }
+              >
+                Pesanan Diterima
+              </button>
+              <button
+                className="w-1/6 mr-4 h-10 button-outline py-5  rounded-full"
+                onClick={() =>
+                  navigate("/myaccount/orders?status=Menunggu-Pembayaran")
+                }
+              >
+                Menunggu Pembayaran
+              </button>
+              <button
+                className="w-1/6 mr-4 h-10 button-outline py-5  rounded-full"
+                onClick={() => navigate("/myaccount/orders?status=Diproses")}
+              >
                 Diproses
               </button>
-              <button className="w-1/6 button-outline rounded-none py-5 outline-0">
+              <button
+                className="w-1/6 mr-4 h-10 button-outline py-5  rounded-full"
+                onClick={() => navigate("/myaccount/orders?status=Dikirim")}
+              >
                 Dikirim
               </button>
-              <button className="w-1/6 button-outline rounded-none py-5 outline-0">
+              <button
+                className="w-1/6 mr-4 h-10 button-outline py-5  rounded-full"
+                onClick={() => navigate("/myaccount/orders?status=Selesai")}
+              >
                 Selesai
               </button>
-              <button className="w-1/6 button-outline rounded-none py-5 outline-0">
+              <button
+                className="w-1/6 h-10 button-outline py-5  rounded-full"
+                onClick={() => navigate("/myaccount/orders?status=Dibatalkan")}
+              >
                 Dibatalkan
               </button>
             </div>
-            <div className="w-full flex h-11 justify-between gap-x-48">
+            <div className="w-full flex h-11 justify-between gap-x-48 mt-4">
               <div className="flex gap-x-4 h-full w-full items-center">
-                <div className="font-bold w-28">Jenis Obat</div>
+                <div className="font-bold w-40 ">Jenis Transaksi</div>
                 <div className="w-full flex gap-x-3">
-                  <button className="button-outline w-full rounded-full">
-                    Semua Obat
+                  <button className="button-outline w-1/5 rounded-full">
+                    Transaksi Resep
                   </button>
-                  <button className="button-outline w-full rounded-full">
-                    Obat Resep
-                  </button>
-                  <button className="button-outline w-full rounded-full">
-                    Obat Bebas
+                  <button className="button-outline w-1/5 rounded-full">
+                    Transaksi Langsung
                   </button>
                 </div>
               </div>
-              <div className="hidden lg:flex gap-x-4 items-center">
+              {/* <div className="hidden lg:flex gap-x-4 items-center">
                 <span>Urutkan</span>
                 <select className="select select-primary h-25 w-44 border border-neutral-gray p-2 rounded-lg">
                   <option value="" className="hover:bg-primary">
@@ -442,34 +530,74 @@ function Profile() {
                   </option>
                   <option value="">Terakhir</option>
                 </select>
-              </div>
+              </div> */}
             </div>
-            <div className="w-full h-[200px] drop-shadow-lg justify-center rounded-xl border bg-white border-grey mt-5">
-              <div className="py-4 ml-6 text-xs flex items-stretch ">
-                Jumat, 5 April 2022, 15:45
-                <div className="ml-auto mr-5 h-25 w-30 border bg-danger p-2 rounded text-white  ">
-                  Menunggu Konfirmasi
+            <div className="w-full flex flex-col gap-y-5 mt-4">
+              {loading ? <Loading className="pt-56" /> : printOrders(data)}
+            </div>
+            <div className="w-full h-14 flex justify-between items-center px-4 py-3 mt-4">
+              <div className="w-59 flex h-full items-center gap-x-2">
+                Kartu per halaman
+                <div className="dropdown dropdown-top dropdown-end">
+                  <label
+                    tabIndex="0"
+                    className="h-full w-20 border border-neutral-gray p-1 rounded-lg focus:outline-primary flex gap-x-5 cursor-pointer"
+                  >
+                    {limit} <ChevronDownIcon className={`h-5`} />
+                  </label>
+                  <ul
+                    tabIndex="0"
+                    className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-full"
+                  >
+                    <li>
+                      <button onClick={() => setLimit(10)}>10</button>
+                    </li>
+                    <li>
+                      <button onClick={() => setLimit(20)}>20</button>
+                    </li>
+                    <li>
+                      <button onClick={() => setLimit(30)}>30</button>
+                    </li>
+                  </ul>
                 </div>
               </div>
-              <div className="w-full flex items-stretch">
-                <img src={DefaultPicture} className="w-28 h-24 ml-6 rounded" />
-                <div className="ml-2 text-xs">
-                  Nomor Resep
-                  <div className="text-base py-1">#123abc456def</div>
-                  <div className="text-xs gap-4 mt-8 text-primary">
-                    Tampilkan Detail
-                  </div>
+              <div className="h-8 min-w-min flex items-center gap-x-2">
+                <button
+                  className="button-outline h-7 aspect-square rounded-full"
+                  onClick={() => setPage(0)}
+                >
+                  <ChevronDoubleLeftIcon className="h-5" />
+                </button>
+                <button
+                  className="button-primary h-full aspect-square rounded-full"
+                  disabled={page === minPage}
+                  onClick={() => setPage((prev) => prev - 1)}
+                >
+                  <ChevronLeftIcon className="h-7" />
+                </button>
+                <div className="h-full w-full flex gap-x-2">
+                  {loading && !total ? (
+                    <div className="w-[250px] h-full rounded-lg bg-neutral-gray button-loading flex justify-center items-center">
+                      Loading ...
+                    </div>
+                  ) : (
+                    printButtons()
+                  )}
                 </div>
-                <div className="ml-auto mr-5">
-                  <span className="countdown font-mono text-4xl text-red-400 border-red-400">
-                    <span className="--value:10;"></span>:
-                    <span className="--value:24;"></span>:
-                    <span className="--value:5;"></span>
-                  </span>
-                </div>
-              </div>
-              <div className="ml-6 py-6 text-xs text-primary ">
-                Costumer Chat Service
+
+                <button
+                  className="button-primary h-full aspect-square rounded-full"
+                  disabled={page === totalPages - 1}
+                  onClick={() => setPage((prev) => prev + 1)}
+                >
+                  <ChevronRightIcon className="h-7" />
+                </button>
+                <button
+                  className="button-outline h-7 aspect-square rounded-full"
+                  onClick={() => setPage(totalPages - 1)}
+                >
+                  <ChevronDoubleRightIcon className="h-5" />
+                </button>
               </div>
             </div>
           </div>
@@ -508,10 +636,10 @@ function Profile() {
           modalImageCropperHandler={modalImageCropperHandler}
         />
       )}
-      <div className="h-full w-full bg-green-200 flex justify-center pt-20">
+      <div className="h-full w-full bg-white flex justify-center pt-20">
         <div className="container h-full flex px-24 py-14 gap-x-11">
           <div className="w-80 bg-white flex flex-col px-10">
-            <div className="w-full h-20 flex items-center">Jane Doe</div>
+            <div className="w-full h-20 flex items-center">{username}</div>
             <button
               className="w-full h-20 flex items-center border border-1 btn-plain"
               onClick={() => navigate("/myaccount/profile")}
@@ -520,7 +648,7 @@ function Profile() {
             </button>
             <button
               className="w-full h-20 flex items-center border border-1 btn-plain"
-              onClick={() => navigate("/myaccount/orders")}
+              onClick={() => navigate("/myaccount/orders?status=all")}
             >
               Proses Pemesanan
             </button>
@@ -549,7 +677,7 @@ function Profile() {
               Pesan Bantuan
             </button>
           </div>
-          <div className="w-full h-[550px] bg-white">{tabPrint(tab)}</div>
+          <div className="w-full bg-white">{tabPrint(tab)}</div>
         </div>
       </div>
     </>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { Popover } from "@headlessui/react";
 import { AnimatePresence, motion } from "framer-motion";
 import { DotsVerticalIcon } from "@heroicons/react/outline";
@@ -6,15 +6,19 @@ import trashIcon from "../../Assets/trash-icon.png";
 import editIcon from "../../Assets/edit-icon.png";
 import axios from "axios";
 import API_URL from "../../Helpers/API_URL";
+import { toast } from "react-toastify";
 
 function PopoverProduct(props) {
-  const { openModalEditOptions, id, setEditId } = props;
-  const [deleteProduct, setDeleteProduct] = useState([]);
+  const { openModalEditOptions, id, setEditId, getProducts } = props;
 
   const deleteSubmit = async (id) => {
     try {
-      console.log(id);
       await axios.delete(`${API_URL}/admin/delete-product?id=${id}`);
+      toast.success(`Produk berhasil dihapus`, {
+        theme: "colored",
+        style: { backgroundColor: "#009B90" },
+      });
+      getProducts();
     } catch (error) {
       console.log(error);
     }
@@ -51,7 +55,9 @@ function PopoverProduct(props) {
                 </button>
                 <button
                   className="btn-plain rounded-full h-8 aspect-square border flex justify-center items-center border-primary/20 hover:bg-primary/20"
-                  onClick={() => deleteSubmit(id)}
+                  onClick={() => {
+                    deleteSubmit(id);
+                  }}
                 >
                   <img src={trashIcon} alt="" className="h-5" />
                 </button>

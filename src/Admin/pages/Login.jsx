@@ -68,11 +68,7 @@ function Login() {
       <div className="flex">
         <div className="w-1/2 h-full flex">
           <div className="bg-white m-auto h-full w-full">
-            <img
-              className="w-[1300px] h-[800px] pb-16"
-              alt=""
-              src={signupImage}
-            />
+            <img className="w-[700px] h-[750px]" alt="" src={signupImage} />
           </div>
         </div>
         <div className="w-1/2 h-full flex">
@@ -144,7 +140,7 @@ function Login() {
                       ) : null}
                     </div>
 
-                    <div className="mb-3">
+                    <div className="mb-3 relative">
                       <div className="w-9 h-5 mb-1">Password</div>
                       <input
                         className={
@@ -169,7 +165,7 @@ function Login() {
                       />
                       <button
                         type="button"
-                        className="h-6 w-6 absolute right-20 top-[337px] translate-y-[5%] text-secondary rounded-full flex justify-center items-center hover:bg-neutral-gray"
+                        className="h-6 w-6 absolute right-5 top-8 text-secondary rounded-full flex justify-center items-center hover:bg-neutral-gray"
                         onClick={() => setVisible(!visible)}
                       >
                         {visible ? (
@@ -198,7 +194,7 @@ function Login() {
                     </div>
                     <div className="w-full flex justify-center mb-12">
                       <button
-                        className="w-full h-12 border bg-teal-600 text-white rounded-lg hover:bg-teal-700"
+                        className="w-full h-12 border bg-teal-600 text-white rounded-md hover:bg-teal-700"
                         type="submit"
                         disabled={!isValid || !changed || isSubmitting}
                       >

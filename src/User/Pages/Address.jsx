@@ -12,7 +12,7 @@ import { newAddressAction } from "../../Redux/Reducers/Actions/UserActions";
 function Address() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { isLogin } = useSelector((state) => state.user);
+  const { isLogin, verified } = useSelector((state) => state.user);
   const [provinceId, setProvinceId] = useState(0);
   const [provinces, setProvinces] = useState([]);
   const [cities, setCities] = useState([
@@ -80,10 +80,8 @@ function Address() {
   const onSubmit = async (values, { setSubmitting }) => {
     try {
       dispatch({ type: "LOADING" });
-      console.log({ values });
-      console.log(values.primaryAddress);
       await dispatch(newAddressAction(values));
-      navigate("/checkout");
+      navigate(-1);
     } catch (error) {
       console.log(error);
     } finally {
@@ -93,7 +91,8 @@ function Address() {
   };
 
   useEffect(() => {
-    if (!isLogin) navigate("/home");
+    if (!isLogin) navigate("/");
+    if (isLogin && !verified) navigate("/unverified");
     if (!provinces[0]) getProvince();
     if (provinceId) getCity();
 

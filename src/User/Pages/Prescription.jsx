@@ -17,40 +17,15 @@ function Prescription() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [uploadSuccess, setUploadSuccess] = useState(false);
-  const { isLogin } = useSelector((state) => state.user);
+  const { isLogin, verified } = useSelector((state) => state.user);
   const [loadingSubmit, setloadingSubmit] = useState(false);
   const [succeed, setSucceed] = useState(false);
   const [selectedImage, setselectedImage] = useState({
     file: [],
     filePreview: null,
   });
-  // const { acceptedFiles, fileRejections, getRootProps, getInputProps } =
-  //   useDropzone({
-  //     accept: {
-  //       "image/jpeg": [],
-  //       "image/png": [],
-  //     },
-  //   });
-
-  // const acceptedFileItems = acceptedFiles.map((file) => (
-  //   <li key={file.path}>
-  //     {file.path} - {file.size} bytes
-  //   </li>
-  // ));
-
-  // const fileRejectionItems = fileRejections.map(({ file, errors }) => (
-  //   <li key={file.path}>
-  //     {file.path} - {file.size} bytes
-  //     <ul>
-  //       {errors.map((e) => (
-  //         <li key={e.code}>{e.message}</li>
-  //       ))}
-  //     </ul>
-  //   </li>
-  // ));
 
   const onFileChange = (e) => {
-    console.log(e.target.files[0]);
     if (e.target && e.target.files[0]) {
       setselectedImage({
         ...selectedImage,
@@ -70,10 +45,11 @@ function Prescription() {
           authorization: token,
         },
       });
-      toast.success(`Produk berhasil ditambahkan`, {
+      toast.success(`Resep berhasil ditambahkan`, {
         theme: "colored",
         style: { backgroundColor: "#009B90" },
       });
+      setUploadSuccess(true);
       if (selectedImage.file.length == 0) {
         throw "Please select images to submit!";
       } else {
@@ -84,10 +60,15 @@ function Prescription() {
         type: "ERROR",
         payload: error.response.data.message || "Network Error",
       });
+      toast.error(error.response.data.message, {
+        theme: "colored",
+        style: { backgroundColor: "#EB1D36" },
+      });
     }
   };
   useEffect(() => {
     if (!isLogin) navigate("/home");
+    if (isLogin && !verified) return navigate("/unverified");
   }, [isLogin]);
 
   if (uploadSuccess) {
@@ -95,14 +76,14 @@ function Prescription() {
       <div className="h-full w-screen bg-white flex justify-center items-center pt-20">
         <div className="container h-[500px] w-[400px] flex flex-col justify-between items-center bg-white py-10">
           <img src={succesImage} alt="" />
-          <div className="font-bold text-xl">Unggah Resep Berhasil</div>
+          <div className="font-bold text-xl mt-4">Unggah Resep Berhasil</div>
           <div className="flex text-center text-sm">
             Kamu akan mendapat notifikasi apabila resep doktermu dikonfirmasi
             oleh admin.
           </div>
           <button
-            className="border border-green-800 hover:bg-green-800"
-            onClick={() => navigate("/myaccount/profile")}
+            className="bg-primary hover:bg-teal-500 text-white disabled:bg-gray-600 text-sm mt-4 w-1/2 h-1/4 rounded-lg"
+            onClick={() => navigate("/myaccount/orders?status=all")}
           >
             Lihat progres pemesanan
           </button>
@@ -130,34 +111,6 @@ function Prescription() {
             <div className="w-full ">
               Unggah Resep Dokter
               <div className="w-full h-[400px] rounded-xl px-6 border-dashed border-4 bg-white border-grey mt-5">
-                {/* <div className="flex justify-center mt-20 text-xl">
-                      Tarik & Letakan File
-                    </div> */}
-                {/* <div className="w-full min-h-min flex flex-col gap-y-5 mt-10">
-                      <div className="w-full h-full relative flex justify-center items-center">
-                        <div className="outline outline-1 outline-neutral-gray w-[150px] absolute" />
-                        <div className="px-5 leading-none z-10 min-h-min bg-cyan-50">
-                          atau
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex justify-center mt-10 ">
-                      <button className="h-10 w-20 border border-green-800 hover:bg-green-800">
-                        Unggah
-                      </button>
-                    </div> */}
-                {/* 
-                <div {...getRootProps({ className: "dropzone" })}>
-                  <input {...getInputProps()} />
-                  <p>Drag 'n' drop some files here, or click to select files</p>
-                  <em>(Only *.jpeg and *.png images will be accepted)</em>
-                </div>
-                <aside>
-                  <h4>Accepted files</h4>
-                  <ul>{acceptedFileItems}</ul>
-                  <h4>Rejected files</h4>
-                  <ul>{fileRejectionItems}</ul>
-                </aside> */}
                 <div className="w-1/3 aspect-square overflow-hidden items-center ml-80">
                   {selectedImage.filePreview ? (
                     <img
@@ -166,7 +119,7 @@ function Prescription() {
                     />
                   ) : null}
                 </div>
-                <div>
+                <div className="">
                   {" "}
                   <input
                     className="hidden"
@@ -183,11 +136,11 @@ function Prescription() {
                   </label>
                 </div>
               </div>
-              <div className="flex justify-end mt-5">
+              <div className="flex justify-end mt-4">
                 <Button
                   type="submit"
                   buttonContent={loadingSubmit ? "Loading.." : "Save Changes"}
-                  className={`bg-primary text-white disabled:bg-gray-600 disabled:cursor-not-allowed text-sm w-1/5 ${"loading"}`}
+                  className={`bg-primary hover:bg-teal-500 text-white disabled:bg-gray-600 disabled:cursor-not-allowed text-sm w-1/5 h-11 rounded-md ${"loading"}`}
                   onClick={() => submitPhoto()}
                 />
               </div>

@@ -6,11 +6,25 @@ import transaksiActiveIcon from "../../Assets/transaksi-admin-active.png";
 import API_URL from "../../Helpers/API_URL";
 import { fullDateGenerator } from "../../Helpers/dateGenerator";
 import ModalPrescriptionService from "./ModalPrescriptionService";
+import { toast } from "react-toastify";
+import formatToCurrency from "../../Helpers/formatToCurrency";
 
 function CardOrderAdmin({ data, getOrders }) {
   const [checked, setChecked] = useState(false);
-  const [status, setStatus] = useState(data.status);
   const [isOpen, setIsOpen] = useState(false);
+  const {
+    status,
+    id,
+    transaction_code,
+    date_requested,
+    prescription_photo,
+    expired_at,
+    username,
+    selected_address,
+    shipping_method,
+    total_price,
+    pesan,
+  } = data;
 
   function closeModal() {
     setIsOpen(false);
@@ -22,16 +36,25 @@ function CardOrderAdmin({ data, getOrders }) {
 
   const cancelOrder = async (id) => {
     try {
-      console.log(id);
       await axios.patch(`${API_URL}/transaction/order/reject?id=${id}`);
+      toast.success(`Pesanan Dibatalkan`, {
+        theme: "colored",
+        style: { backgroundColor: "#009B90" },
+      });
     } catch (error) {
       console.log(error);
     }
   };
+
   const confirmlOrder = async (id) => {
     try {
-      console.log(id);
-      await axios.patch(`${API_URL}/transaction/order/confirm?id=${id}`);
+      await axios.patch(`${API_URL}/transaction/order/confirm`, {
+        transaction_code,
+      });
+      toast.success(`Pesanan Berhasil Dikonfirmasi`, {
+        theme: "colored",
+        style: { backgroundColor: "#009B90" },
+      });
     } catch (error) {
       console.log(error);
     }
@@ -44,7 +67,7 @@ function CardOrderAdmin({ data, getOrders }) {
         data={data}
         getOrders={getOrders}
       />
-      <div className="w-full h-72 border flex flex-col bg-white rounded-lg overflow-hidden shadow-lg">
+      <div className="w-full h-72 border flex flex-col bg-white rounded-lg overflow-hidden shadow-custom">
         <div
           className={`w-full h-14 flex justify-between items-center border-l-8 px-7 duration-300 ${
             checked ? "border-primary" : "border-white"
@@ -61,20 +84,20 @@ function CardOrderAdmin({ data, getOrders }) {
             />
             <span className="font-bold">{status.split("-").join(" ")}</span>
             <span className="text-neutral-gray">/</span>
-            <span className="font-bold">{data.transaction_code}</span>
+            <span className="font-bold">{transaction_code}</span>
             <span className="text-neutral-gray">/</span>
             <span className="font-bold text-gray-500 flex gap-x-2 items-center">
               <ClockIcon className="h-5 aspect-square" />
-              {fullDateGenerator(data.date_process)}
+              {fullDateGenerator(date_requested)}
             </span>
           </div>
           <div className="flex gap-x-2">
-            {(status == "Pengecekan-Resep" || "Diproses") && (
+            {(status === "Pengecekan-Resep" || status === "Diproses") && (
               <>
                 <span className="font-bold">Respon Sebelum</span>
                 <div className="bg-yellow-200 rounded flex gap-x-2 items-center font-semibold text-red-600 text-xs px-2">
                   <ClockIcon className="h-4 aspect-square" />
-                  {`{date_process + 2day}`}
+                  {fullDateGenerator(expired_at)}
                 </div>
               </>
             )}
@@ -87,40 +110,57 @@ function CardOrderAdmin({ data, getOrders }) {
               <div className="h-full aspect-square border rounded object-cover overflow-hidden">
                 <img
                   src={
-                    data.transaction_code.split()[1] === "L"
+                    transaction_code.split()[1] === "L"
                       ? ""
-                      : API_URL + data.prescription_photo
+                      : API_URL + prescription_photo
                   }
                   alt="photo"
                 />
               </div>
               <div className="w-full h-full">
-                {data.transaction_code.split()[1] === "L"
-                  ? ""
-                  : "Lakukan Pengecekan Resep"}
+                {status == "Pengecekan-Resep" && "Lakukan Pengecekan Resep"}
+                {status == "Pesanan-Diterima" &&
+                  "Menunggu Transaksi Dilanjutkan Oleh User"}
+                {status == "Menunggu-Pembayaran" &&
+                  "Menunggu Pembayaran Dari User"}
+                {status == "Diproses" && "Lakukan Pengecekan Transaksi"}
+                {status == "Dikirim" && "Kurir Dalam Perjalanan"}
+                {status == "Dibatalkan" && pesan}
               </div>
             </div>
             <div className="border-r h-full" />
             <div className="w-2/3 flex gap-x-8">
               <div className="w-1/3 flex flex-col">
                 <h3 className="font-bold">Pembeli</h3>
-                <p>{data.username}</p>
+                <p>{username}</p>
               </div>
-              {status != "Pengecekan-Resep" && (
+              {status != "Pengecekan-Resep" && status != "Pesanan-Diterima" && (
                 <>
-                  <div className="w-1/3 border">Alamat</div>
-                  <div className="w-1/3 border">Kurir</div>
+                  {selected_address ? (
+                    <div className="w-1/3 flex flex-col">
+                      <h3 className="font-bold">Alamat</h3>
+                      <p className="text-sm">{selected_address}</p>
+                    </div>
+                  ) : null}
+                  {shipping_method ? (
+                    <div className="w-1/3 flex flex-col">
+                      <h3 className="font-bold">Metode Pengiriman</h3>
+                      <p className="text-sm">{shipping_method}</p>
+                    </div>
+                  ) : null}
                 </>
               )}
             </div>
           </div>
           <div className="flex justify-between items-center h-12 w-full px-5 font-bold">
-            {status != "Pengecekan-Resep" && (
+            {total_price ? (
               <>
                 <div className="w-1/2">Total Harga</div>
-                <div className="w-1/2 text-right">Price</div>
+                <div className="w-1/2 text-right">
+                  {formatToCurrency(total_price)}
+                </div>
               </>
-            )}
+            ) : null}
           </div>
           <div className="flex h-8 justify-between items-center">
             <div className="h-full flex gap-x-5">
@@ -136,11 +176,11 @@ function CardOrderAdmin({ data, getOrders }) {
               )}
             </div>
             <div className="h-full flex gap-x-5 w-1/3">
-              {(status == "Pengecekan-Resep" || "Diproses") && (
+              {(status == "Pengecekan-Resep" || status == "Diproses") && (
                 <>
                   <button
                     className="button-outline w-1/2"
-                    onClick={() => cancelOrder(data.id)}
+                    onClick={() => cancelOrder(id)}
                   >
                     Tolak Pesanan
                   </button>
@@ -155,7 +195,7 @@ function CardOrderAdmin({ data, getOrders }) {
                   {status == "Diproses" && (
                     <button
                       className="button-primary w-1/2"
-                      onClick={() => confirmlOrder(data.id)}
+                      onClick={() => confirmlOrder()}
                     >
                       Terima Pesanan
                     </button>

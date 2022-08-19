@@ -26,18 +26,18 @@ function ChangePassword({ changePassword, setChangePassword }) {
   const validationSchema = Yup.object({
     oldPassword: Yup.string().required("Old Password is required"),
     newPassword: Yup.string()
-      .min(8, "Password is too short - minimimum of 8 characters.")
+      .min(8, "Password is too short - minimimum of 8 characters")
       .matches(
         /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[#$@!%&*?\^\(\)\-\_\+\=])/,
-        "Must also contain uppercase, number, and special character (ex. !, #)."
+        "Must also contain uppercase, number, and special character"
       )
       .required("Password is required!"),
     confirmationPassword: Yup.string()
-      .oneOf([Yup.ref("newPassword"), null], "Passwords do not match.")
-      .required("Passwords do not match."),
+      .oneOf([Yup.ref("newPassword"), null], "Passwords do not match")
+      .required("Passwords do not match"),
   });
 
-  const onSubmit = async (values, onSubmit) => {
+  const onSubmit1 = async (values, { setSubmitting }) => {
     try {
       console.log("Password jalan!<<<<<<<>>>>>>>");
       let token = Cookies.get("token");
@@ -46,7 +46,6 @@ function ChangePassword({ changePassword, setChangePassword }) {
         {
           oldPassword: values.oldPassword,
           newPassword: values.newPassword,
-          confirmationPassword: values.confirmationPassword,
         },
         {
           headers: {
@@ -68,7 +67,7 @@ function ChangePassword({ changePassword, setChangePassword }) {
         payload: error.response.data.message || "Network Error",
       });
     } finally {
-      onSubmit.setSubmitting(false);
+      setSubmitting(false);
     }
   };
 
@@ -86,7 +85,7 @@ function ChangePassword({ changePassword, setChangePassword }) {
         <div className="h-1/7 flex items-center font-semibold justify-between">
           Ganti Kata sandi:
           <button
-            className="h-6 aspect-square flex items-center justify-center hover:bg-teal-500"
+            className="h-6 aspect-square flex items-center justify-center hover:bg-teal-500 hover:text-white"
             onClick={() => setChangePassword(false)}
           >
             x
@@ -96,7 +95,7 @@ function ChangePassword({ changePassword, setChangePassword }) {
         <Formik
           initialValues={initialValues}
           validationSchema={validationSchema}
-          onSubmit={onSubmit}
+          onSubmit={onSubmit1}
         >
           {(formik) => {
             const { handleChange, errors, touched, isValid, handleBlur } =
@@ -220,7 +219,7 @@ function ChangePassword({ changePassword, setChangePassword }) {
                   </div>
                 </div>
 
-                <div className="text-xs pt-2">
+                <div className="text-xs">
                   Kata sandi harus mengandung setidaknya 8 karakter termasuk
                   huruf besar, huruf kecil, simbol dan angka
                 </div>
@@ -229,7 +228,6 @@ function ChangePassword({ changePassword, setChangePassword }) {
                     className="border border-teal-500 hover:bg-teal-500 w-32 h-8 rounded-md"
                     type="submit"
                     disabled={!isValid || !changed}
-                    onClick={onSubmit}
                   >
                     Lanjutkan
                   </button>

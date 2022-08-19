@@ -1,5 +1,11 @@
 import "./App.css";
-import { Navigate, Route, Routes, useLocation } from "react-router-dom";
+import {
+  Navigate,
+  Route,
+  Routes,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
 import SignUp from "./User/Pages/SignUp";
 import LogIn from "./User/Pages/LogIn";
 import Home from "./User/Pages/Home";
@@ -8,7 +14,6 @@ import ProductDetail from "./User/Pages/ProductDetail";
 import Checkout from "./User/Pages/Checkout";
 import Address from "./User/Pages/Address";
 import Cart from "./User/Pages/Cart";
-import Confirmation from "./User/Pages/Confirmation";
 import Prescription from "./User/Pages/Prescription";
 import Profile from "./User/Pages/Profile";
 import Navbar from "./User/Component/Navbar";
@@ -20,11 +25,14 @@ import ResetPassword from "./User/Pages/ResetPassword";
 import Admin from "./User/Pages/Admin";
 import Unverified from "./User/Pages/Unverified";
 import { useSelector } from "react-redux";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import gradientBg from "./Assets/gradient-bg.png";
+import NavbarMobile from "./User/Component/NavbarMobile";
+import Order from "./User/Pages/Order";
 
 function App() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { isLogin } = useSelector((state) => state.user);
   let noConnectionToast = useRef(null);
   const statusOnline = () => {
@@ -51,6 +59,15 @@ function App() {
   window.addEventListener("offline", statusOffline);
   window.addEventListener("online", statusOnline);
   //
+  useEffect(() => {
+    if (
+      location.pathname === "/myaccount" ||
+      location.pathname === "/myaccount/"
+    ) {
+      navigate("/myaccount/profile");
+    }
+  }, []);
+
   return (
     <div className="min-h-screen">
       {/* <div className="fixed">
@@ -65,6 +82,7 @@ function App() {
       location.pathname.match("/reset-password/") ? null : (
         <Navbar />
       )}
+
       <Routes>
         <Route path="/register" element={isLogin ? <Home /> : <SignUp />} />
         <Route path="/login" element={<LogIn />} />
@@ -77,11 +95,12 @@ function App() {
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/address" element={<Address />} />
         <Route path="/cart" element={<Cart />} />
-        <Route path="/confirmation" element={<Confirmation />} />
+        <Route path="/order" element={<Order />} />
         <Route path="/prescription" element={<Prescription />} />
         <Route path="/myaccount/:tab" element={<Profile />} />
         <Route path="/verification/:token" element={<Verification />} />
         <Route path="/unverified" element={<Unverified />} />
+        {/* <Route path="/search/:category" element={<Search />} /> */}
         <Route path="/reset-password/:token" element={<ResetPassword />} />
         {/* Admin */}
         <Route path="/admin/*" element={<Admin />} />
@@ -95,6 +114,7 @@ function App() {
       location.pathname.match("/reset-password/") ? null : (
         <Footer />
       )}
+
       <ToastContainer
         pauseOnFocusLoss={false}
         autoClose={3000}

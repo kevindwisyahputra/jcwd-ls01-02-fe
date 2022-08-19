@@ -11,11 +11,11 @@ import Button from "../Component/Button";
 import emailIcon from "../../Assets/email-icon.png";
 import passwordIcon from "../../Assets/password-icon.png";
 import signupImage from "../../Assets/signup-image.png";
-import logoImage from "../../Assets/logo-1.png";
 import { BsFillEyeFill, BsFillEyeSlashFill } from "react-icons/bs";
 import ForgotPasswordModal from "../Component/ForgotPasswordModal";
 import googleIcon from "../../Assets/google-icon.png";
 import FormikControl from "../Component/Formik/FormikControl";
+import logo from "../../Assets/logo.png";
 
 function LogIn() {
   const navigate = useNavigate();
@@ -60,15 +60,17 @@ function LogIn() {
         theme: "colored",
         style: { backgroundColor: "#009B90" },
       });
-      if (!res.data.data.verified) {
-        navigate("/unverified");
-      } else {
+      setTimeout(() => {
         navigate("/");
-      }
+      });
     } catch (error) {
       dispatch({
         type: "ERROR",
         payload: error.response.data.message || "Network Error",
+      });
+      toast.error(error.response.data.message, {
+        theme: "colored",
+        style: { backgroundColor: "#EB1D36" },
       });
     } finally {
       onSubmit.setSubmitting(false);
@@ -93,10 +95,10 @@ function LogIn() {
       <div className="w-screen h-screen flex bg-white">
         <div className="w-1/2 h-full border flex justify-center items-center relative">
           <i
-            className="w-1/6 min-h-min cursor-pointer absolute left-10 top-10 z-10"
+            className="btn-plain w-1/6 min-h-min z-10 cursor-pointer absolute left-10 top-10"
             onClick={() => navigate("/")}
           >
-            <img src={logoImage} alt="" className="outline-none" />
+            <img src={logo} alt="" />
           </i>
           <img
             src={signupImage}
@@ -149,11 +151,6 @@ function LogIn() {
                         alt=""
                         className="h-5 w-5 absolute left-5 top-11"
                       />
-                      {message[0] && !changed && (
-                        <div className="absolute text-red-600 -bottom-6 right-0 text-sm">
-                          {message[0]}
-                        </div>
-                      )}
                     </div>
 
                     {/* Password */}

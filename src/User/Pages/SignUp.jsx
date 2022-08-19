@@ -14,21 +14,18 @@ import facebookIcon from "../../Assets/facebook-icon.png";
 import googleIcon from "../../Assets/google-icon.png";
 import FormikControl from "../Component/Formik/FormikControl";
 import { registerAction } from "../../Redux/Reducers/Actions/UserActions";
+import { ChevronLeftIcon } from "@heroicons/react/outline";
 
 function SignUp() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const { error_mes } = useSelector((state) => state.user);
+  const { error_mes, isLogin } = useSelector((state) => state.user);
 
   const [visible, setVisible] = useState(false);
   const [visibleConf, setVisibleConf] = useState(false);
   const [changed, setChanged] = useState(false);
-
-  let message = [];
-  if (error_mes) {
-    message = error_mes.split(",");
-  }
+  const [message, setMessage] = useState([]);
 
   const initialValues = {
     username: "",
@@ -50,8 +47,7 @@ function SignUp() {
     password: Yup.string()
       .min(8, "Password terlalu pendek - minimum 8 karakter")
       .matches(
-        //   /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&^_-])[A-Za-z\d@$!%*?&]/,
-        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[#$@!%&*?\^\(\)\-\_\+\=])/,
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[#$@!%&*?^()\-_+=])/,
         "Harus menganduk huruf besar, angka, dan karakter spesial (e.g. !@#$)"
       )
       .required("Password wajib diisi"),
@@ -69,7 +65,7 @@ function SignUp() {
 
   const onSubmit = async (values, { setSubmitting }) => {
     try {
-      message = [];
+      setMessage([]);
       setChanged(false);
       dispatch({ type: "LOADING" });
       await dispatch(registerAction(values));
@@ -83,16 +79,19 @@ function SignUp() {
   };
 
   useEffect(() => {
+    if (error_mes) {
+      setMessage(error_mes.split(","));
+    }
+    if (isLogin) return navigate("/");
     return () => {
-      message = [];
       dispatch({ type: "CLEARERROR" });
     };
-  }, []);
+    // eslint-disable-next-line
+  }, [error_mes]);
 
-  console.log({ changed, message });
   return (
-    <div className="w-screen h-screen flex bg-white">
-      <div className="w-1/2 h-full flex justify-center items-center relative">
+    <div className="w-screen min-h-screen flex bg-white">
+      <div className="w-1/2 min-h-screen hidden sm:flex justify-center items-center relative">
         <i
           className="btn-plain w-1/6 min-h-min z-10 cursor-pointer absolute left-10 top-10"
           onClick={() => navigate("/")}
@@ -105,10 +104,16 @@ function SignUp() {
           className="h-full object-cover absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
         />
       </div>
-      <div className="w-1/2 h-full border flex shadow-2xl">
-        <div className="bg-white h-5/6 w-5/6 m-auto flex flex-col items-center justify-center gap-y-5 py-10 container">
-          <div className="w-full min-h-min text-2xl font-bold">
-            Mari Kita Mulai Ya
+      <div className="w-full sm:w-1/2 min-h-screen border flex shadow-2xl">
+        <div className="bg-white h-fit sm:h-5/6 w-5/6 m-auto flex flex-col sm:items-center sm:justify-center gap-y-2 sm:gap-y-5 py-5 sm:py-10 container">
+          <div className="w-full min-h-min text-xl sm:text-2xl flex gap-x-2 font-bold items-center">
+            <button
+              className="btn-plain h-10 aspect-square flex sm:hidden"
+              onClick={() => navigate("/")}
+            >
+              <ChevronLeftIcon className="h-full scale-75" />
+            </button>
+            Registrasi Akun
           </div>
           <div className="w-full min-h-min text-neutral-gray">
             Sudah punya akun?{" "}
@@ -123,7 +128,7 @@ function SignUp() {
           </div>
           <div className="w-full min-h-min flex flex-col gap-y-5">
             <div className="w-full h-1/2">
-              <div className="w-full h-11 flex items-center gap-x-4">
+              <div className="w-full h-11 hidden sm:flex items-center gap-x-4">
                 <Button
                   type="button"
                   className="button-general w-full outline outline-1 outline-neutral-gray relative gap-x-3 hover:bg-neutral-gray/50"
@@ -153,6 +158,36 @@ function SignUp() {
                   }
                 />
               </div>
+              <div className="w-full h-11 flex sm:hidden items-center gap-x-4">
+                <Button
+                  type="button"
+                  className="button-general w-full py-3 outline outline-1 font-bold outline-neutral-gray relative gap-x-3 hover:bg-neutral-gray/50"
+                  buttonContent={
+                    <>
+                      <img
+                        src={googleIcon}
+                        alt=""
+                        className="h-5 aspect-square"
+                      />{" "}
+                      Google
+                    </>
+                  }
+                />
+                <Button
+                  type="button"
+                  className="button-general w-full py-3 bg-facebook font-bold text-white relative gap-x-3"
+                  buttonContent={
+                    <>
+                      <img
+                        src={facebookIcon}
+                        alt=""
+                        className="h-5 aspect-square"
+                      />{" "}
+                      Facebook
+                    </>
+                  }
+                />
+              </div>
             </div>
             <div className="w-full h-full relative flex justify-center items-center">
               <div className="border border-t-0 border-neutral-gray w-full absolute" />
@@ -170,7 +205,6 @@ function SignUp() {
               const {
                 handleChange,
                 isSubmitting,
-                isValid,
                 handleBlur,
                 errors,
                 touched,
@@ -202,7 +236,7 @@ function SignUp() {
                     <img
                       src={profileIcon}
                       alt=""
-                      className="h-5 w-5 absolute left-5 top-11"
+                      className="h-5 w-5 absolute left-5 top-10 sm:top-11"
                     />
                     {message[0] && !changed && (
                       <div className="absolute text-red-600 -bottom-6 right-0 text-sm">
@@ -234,7 +268,7 @@ function SignUp() {
                     <img
                       src={emailIcon}
                       alt=""
-                      className="h-5 w-5 absolute left-5 top-11"
+                      className="h-5 w-5 absolute left-5 top-10 sm:top-11"
                     />
                     {message[1] && !changed && (
                       <div className="absolute text-red-600 -bottom-6 right-0 text-sm">
@@ -263,7 +297,7 @@ function SignUp() {
                     />
                     <button
                       type="button"
-                      className="button-general outline-0 h-7 aspect-square absolute right-5 top-10  text-secondary rounded-full flex justify-center items-center hover:bg-neutral-gray"
+                      className="button-general outline-0 h-7 aspect-square absolute right-2 sm:right-5 top-9 sm:top-10 text-secondary rounded-full flex justify-center items-center hover:bg-neutral-gray"
                       onClick={() => setVisible(!visible)}
                     >
                       {visible ? (
@@ -275,7 +309,7 @@ function SignUp() {
                     <img
                       src={passwordIcon}
                       alt=""
-                      className="h-5 w-5 absolute left-5 top-11"
+                      className="h-5 w-5 absolute left-5 top-10 sm:top-11"
                     />
                   </div>
                   {/* Confirmation Password */}
@@ -299,7 +333,7 @@ function SignUp() {
                     />
                     <button
                       type="button"
-                      className="button-general outline-0 h-7 aspect-square absolute right-5 top-10  text-secondary rounded-full flex justify-center items-center hover:bg-neutral-gray"
+                      className="button-general outline-0 h-7 aspect-square absolute right-2 sm:right-5 top-9 sm:top-10  text-secondary rounded-full flex justify-center items-center hover:bg-neutral-gray"
                       onClick={() => setVisibleConf(!visibleConf)}
                     >
                       {visibleConf ? (
@@ -311,7 +345,7 @@ function SignUp() {
                     <img
                       src={passwordIcon}
                       alt=""
-                      className="h-5 w-5 absolute left-5 top-11"
+                      className="h-5 w-5 absolute left-5 top-10 sm:top-11"
                     />
                   </div>
 
@@ -326,18 +360,18 @@ function SignUp() {
                           : ""
                       }`}
                     />
-                    <label htmlFor="" className="ml-3">
+                    <label htmlFor="" className="ml-3 text-xs sm:text-base">
                       Saya setuju dengan{" "}
                       <label
                         htmlFor="termsAndCondition"
-                        className="span-general text-primary bg-white cursor-pointer hover:underline"
+                        className="span-general text-primary text-xs sm:text-base bg-white cursor-pointer hover:underline"
                       >
                         persyaratan
                       </label>{" "}
                       dan{" "}
                       <label
                         htmlFor="termsAndCondition"
-                        className="span-general text-primary bg-white cursor-pointer hover:underline"
+                        className="span-general text-primary text-xs sm:text-base bg-white cursor-pointer hover:underline"
                       >
                         persetujuan
                       </label>
@@ -358,7 +392,7 @@ function SignUp() {
                             <h1 className="w-full text-center">
                               Persyaratan dan Persetujuan
                             </h1>
-                            <div className="w-full h-4\5 overflow-y-scroll">
+                            <div className="w-full h-4/5 overflow-y-scroll">
                               <p className="text-sm text-justify">
                                 Lorem ipsum dolor, sit amet consectetur
                                 adipisicing elit. Veritatis ducimus facere
@@ -414,7 +448,7 @@ function SignUp() {
                       </label>
                     </label>
                     {errors.termsCondition && touched.termsCondition && (
-                      <div className="absolute text-red-600 -bottom-4 text-sm ml-9">
+                      <div className="absolute text-red-600 -bottom-4 text-[10px] sm:text-sm ml-9">
                         {errors.termsCondition}
                       </div>
                     )}

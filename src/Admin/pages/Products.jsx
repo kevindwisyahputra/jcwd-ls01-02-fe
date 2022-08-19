@@ -23,6 +23,7 @@ import SelectCustom from "../components/SelectCustom";
 import ModalDetails from "../components/ModalDetails";
 import ModalEditOptions from "../components/ModalEditOptions";
 import ModalAddStock from "../components/ModalAddStock";
+import ModalProductStock from "../components/ModalProductStock";
 
 function Products() {
   const initialTerms = "";
@@ -32,7 +33,9 @@ function Products() {
   const [modalAddStock, setModalAddStock] = useState(false);
   const [modalDetails, setModalDetails] = useState(false);
   const [modalEditOptions, setModalEditOptions] = useState(false);
+  const [modalProductStock, setModalProductStock] = useState(false);
   const [editId, setEditId] = useState(null);
+  const [stockId, setStockId] = useState(null);
   const [detailsId, setDetailsId] = useState(null);
   const [products, setProducts] = useState([]);
   const [category, setCategory] = useState("Semua");
@@ -74,7 +77,12 @@ function Products() {
   function openModalDetails() {
     setModalDetails(true);
   }
-
+  function closeModalProductStock() {
+    setModalProductStock(false);
+  }
+  function openModalProductStock() {
+    setModalProductStock(true);
+  }
   const getProducts = async (reset) => {
     try {
       setLoading(true);
@@ -105,10 +113,9 @@ function Products() {
 
   const resetFilter = () => {
     setTerms(initialTerms);
-    setCategory("all");
-    setGolongan("all");
+    setCategory("Semua");
+    setGolongan("Semua");
     setPage(0);
-
     getProducts(1);
   };
 
@@ -138,15 +145,18 @@ function Products() {
                 <button
                   className="button-primary h-8 w-full"
                   onClick={() => {
-                    openModalDetails();
                     setDetailsId(val.id);
+                    openModalDetails();
                   }}
                 >
                   Detail Produk
                 </button>
                 <button
                   className="button-primary h-8 w-full"
-                  onClick={() => {}}
+                  onClick={() => {
+                    openModalProductStock();
+                    setStockId(val.id);
+                  }}
                 >
                   Detail Stok
                 </button>
@@ -238,12 +248,17 @@ function Products() {
 
   return (
     <>
-      <ModalAddProduct modalAdd={modalAdd} closeModalAdd={closeModalAdd} />
+      <ModalAddProduct
+        modalAdd={modalAdd}
+        closeModalAdd={closeModalAdd}
+        getProducts={getProducts}
+      />
       <ModalEditProduct
         modalEdit={modalEdit}
         closeModalEdit={closeModalEdit}
         editId={editId}
         setEditId={setEditId}
+        getProducts={getProducts}
       />
       <ModalEditOptions
         modalEditOptions={modalEditOptions}
@@ -258,12 +273,19 @@ function Products() {
         closeModalAddStock={closeModalAddStock}
         editId={editId}
         setEditId={setEditId}
+        getProducts={getProducts}
       />
       <ModalDetails
         modalDetails={modalDetails}
         closeModalDetails={closeModalDetails}
         detailsId={detailsId}
         setDetailsId={setDetailsId}
+      />
+      <ModalProductStock
+        modalProductStock={modalProductStock}
+        closeModalProductStock={closeModalProductStock}
+        stockId={stockId}
+        setStockId={setStockId}
       />
       <div className="bg-admin h-full w-full justify-center flex">
         <div className="w-full pt-16 pl-64">
@@ -277,7 +299,7 @@ function Products() {
                 <button className="button-outline w-32 h-full">Excel</button>
               </div>
             </div>
-            <div className="w-full h-[800px] border shadow-lg rounded-lg overflow-hidden shadow-black/20 p-8 flex flex-col gap-y-5">
+            <div className="w-full h-[800px] border shadow-custom-lg rounded-lg overflow-hidden p-8 flex flex-col gap-y-5">
               <div className="h-20 w-full flex justify-between items-end">
                 <div className="w-full flex gap-x-4 items-end">
                   <div className="flex flex-col gap-y-2 h-full">
@@ -352,7 +374,7 @@ function Products() {
                   )}
                   <table className="w-full rounded-t-lg overflow-hidden table-fixed table-zebra">
                     <thead className="rounded-t-lg h-12">
-                      <tr className="text-center bg-secondary rounded-t-lg font-medium text-white">
+                      <tr className="text-center bg-secondary rounded-t-lg font-medium text-white table-fixed">
                         <th className="w-12">No</th>
                         <th className="w-44">Nama Produk</th>
                         <th className="w-36">No. Produk</th>

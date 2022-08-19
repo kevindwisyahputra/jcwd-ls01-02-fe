@@ -8,6 +8,7 @@ import { toast } from "react-toastify";
 import Loading from "./Loading";
 import { Dialog, Transition } from "@headlessui/react";
 import EditAddress from "./EditAddress";
+import { XIcon } from "@heroicons/react/solid";
 
 function ModalAllAddress(props) {
   const {
@@ -16,7 +17,6 @@ function ModalAllAddress(props) {
     setCourier,
     setSelectedMethod,
     setSelectedMethodCost,
-    setTotal,
     isOpen,
     closeModal,
     setDestinationId,
@@ -76,7 +76,6 @@ function ModalAllAddress(props) {
     });
     setSelectedMethod(null);
     setSelectedMethodCost(0);
-    setTotal(0);
     closeModal();
   };
 
@@ -87,7 +86,6 @@ function ModalAllAddress(props) {
       const res = await axios.get(`${API_URL}/profile/all-addresses`, {
         headers: { authorization: token },
       });
-      console.log(res.data.data);
       setDataAddresses(res.data.data);
     } catch (error) {
       console.log(error);
@@ -187,15 +185,15 @@ function ModalAllAddress(props) {
                     {address ? "Pilih Alamat" : "Ubah Alamat"}
                   </h1>
                   <button
-                    className="btn-plain text-xl rounded-full hover:text-primary hover:bg-primary/20 border flex justify-center items-center px-3 py-1 absolute right-0"
+                    className="btn-plain text-xl rounded-full hover:text-primary hover:bg-primary/20 border flex justify-center items-center p-2 absolute right-0"
                     onClick={closingModal}
                   >
-                    ✕
+                    <XIcon className="h-5" />
                   </button>
                 </Dialog.Title>
                 <div
                   className={`${
-                    editAddress ? "h-[750px]" : "h-[500px]"
+                    editAddress ? "h-[750px]" : "max-h-[500px]"
                   } w-full overflow-y-scroll border border-neutral-gray duration-500`}
                 >
                   {editAddress && (

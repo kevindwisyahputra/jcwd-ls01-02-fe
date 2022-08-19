@@ -7,7 +7,7 @@ module.exports = {
         primary: "#009B90",
         "primary-dark": "#008076",
         "primary-light": "#92C3D1",
-        secondary: "#213360",
+        secondary: "#203360",
         "secondary-light": "#2B478B",
         neutral: "#222222",
         warning: "#FFB156",
@@ -15,6 +15,8 @@ module.exports = {
         "neutral-gray": "#CCCCCC",
         facebook: "#527BCB",
         peach: "#FFB156",
+        jumbotron: "#92C3D1",
+        jbiru: "#2A426F",
       },
       boxShadow: {
         custom: "0px 2px 3px 2px rgba(0, 0, 0, 0.08)",
@@ -22,7 +24,7 @@ module.exports = {
       },
     },
   },
-  plugins: [require("daisyui")],
+  plugins: [require("daisyui"), require("tailwind-scrollbar-hide")],
   daisyui: {
     styled: true,
     themes: [

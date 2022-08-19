@@ -1,45 +1,67 @@
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
+import React, { useState } from "react";
+import axios from "axios";
+import { useNavigate, useParams } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import API_URL from "../../Helpers/API_URL";
 import { HeartIcon } from "@heroicons/react/solid";
 import formatToCurrency from "../../Helpers/formatToCurrency";
+import Cookies from "js-cookie";
 import { toast } from "react-toastify";
 import defaultProduct from "../../Assets/default-product.png";
-import axios from "axios";
 
-function Card({ data }) {
+function Card({ data, imgStyling }) {
   const { isLogin } = useSelector((state) => state.user);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const link = data.name.split(" ").join("_");
+  const params = useParams();
+  const productId = params.id;
+
+  const addtoCart = async () => {
+    try {
+      let token = Cookies.get("token");
+      let res = await axios.post(
+        `${API_URL}/transaction/addtocart`,
+        {
+          productId: data.id,
+          quantity: 1,
+        },
+        { headers: { authorization: token } }
+      );
+      toast.success("Product berhasil dimasukan kedalam Cart!", {
+        theme: "colored",
+        position: "top-center",
+        style: { backgroundColor: "#009B90" },
+      });
+      dispatch({
+        type: "ADDTOCART",
+        payload: res.data.data,
+      });
+    } catch (error) {
+      console.log(error);
+    } finally {
+    }
+  };
 
   return (
     <div
-      className="h-full relative bg-white border p-5 flex flex-col rounded-xl shadow-custom-lg items-center gap-y-3 cursor-pointer hover:-translate-y-2 hover:shadow-primary/50 duration-300"
+      className="h-full relative bg-white border p-2 sm:p-5 flex flex-col rounded-xl shadow-custom-lg items-center gap-y-3 cursor-pointer hover:-translate-y-2 hover:shadow-primary/50 duration-300"
       onClick={() => navigate(`/category/${data.category}/${link}`)}
     >
       <button
         className="btn-plain rounded-full p-2 border flex justify-center items-center bg-white absolute right-3 shadow-md hover:shadow-primary/50 hover:bg-white"
         onClick={(e) => {
           e.stopPropagation();
-          // if (isLogin) {
-          //   console.log("liked");
-          // } else {
-          //   toast.error("Silahkan Log In terlebih dahulu!", {
-          //     theme: "colored",
-          //   });
-          //   navigate("/login");
-          // }
         }}
       >
-        <HeartIcon className="text-neutral-gray h-8" />
+        <HeartIcon className="text-neutral-gray h-5 sm:h-8" />
       </button>
       <div className="flex flex-col items-start w-full">
         <figure className="w-full flex justify-center">
           <img
             src={data.photo ? API_URL + data.photo : defaultProduct}
             alt={defaultProduct}
-            className="h-36 aspect-square"
+            className={`${imgStyling} aspect-square`}
           />
         </figure>
         <div className="flex flex-col gap-y-2 text-secondary w-full">
@@ -67,6 +89,7 @@ function Card({ data }) {
           if (!isLogin) {
             navigate("/login");
           }
+          addtoCart();
         }}
       >
         Keranjang

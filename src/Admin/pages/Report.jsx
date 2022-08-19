@@ -3,7 +3,6 @@ import {
   ChevronDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  SearchIcon,
 } from "@heroicons/react/outline";
 import axios from "axios";
 import API_URL from "../../Helpers/API_URL";
@@ -36,7 +35,6 @@ function Report() {
       const res = await axios.get(`${API_URL}/admin/report`, {
         params: { terms, page, limit, order },
       });
-      console.log(res.data.data.report);
       setReport(res.data.data.report);
       setTotal(res.data.data.total);
       setTotalPages(() => Math.ceil(res.data.data.total / limit));
@@ -84,7 +82,6 @@ function Report() {
     for (let i = 0; i < buttonsTotal; i++) {
       pages.push("");
     }
-    console.log({ buttonsTotal });
     return pages.map((val, i) => {
       return (
         <button
